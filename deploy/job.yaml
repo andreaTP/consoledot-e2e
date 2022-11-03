@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: consoledot-e2e
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: test
+            image: docker.io/andreatp/consoledot-e2e:latest
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: 1
+              limits:
+                memory: "512Mi"
+                cpu: 2
+            env:
+              - name: RH_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: consoledot-e2e-user
+                    key: rh_username
+              - name: RH_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: consoledot-e2e-user
+                    key: rh_password
+              - name: GOOGLE_CHAT_WEBHOOK
+                valueFrom:
+                  secretKeyRef:
+                    name: consoledot-e2e-gchat
+                    key: webhook
+            command:
+              - "/bin/bash"
+              - "-xc"
+              - "npx playwright test --reporter=dot | jq -Rsa . | awk '{print substr($0,1,4000)}' | xargs --verbose -0 -I {} curl -si $GOOGLE_CHAT_WEBHOOK -X POST -H 'Content-Type: application/json' --data '{\"text\": {}}'"
+          restartPolicy: Never
