@@ -1,0 +1,21 @@
+name: Example
+
+on:
+  push:
+
+jobs:
+  example:
+    name: Example
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout "${{ github.ref }}"
+      uses: actions/checkout@v3
+    - name: Checkout upstream consoledot-e2e
+      uses: actions/checkout@v3
+      with:
+        repository: redhat-developer/consoledot-e2e
+        path: consoledot-e2e
+    - name: Add hosts to /etc/hosts
+      run: sudo echo "127.0.0.1 xxx.foo.redhat.com" | sudo tee -a /etc/hosts
+    - name: check
+      run: ping xxx.foo.redhat.com
